@@ -1,0 +1,15 @@
+id=a1
+nome=Fisioterapia
+descricao=Sessão com terapeuta João
+horarioInicio=10:00
+horarioFim=11:00
+status=pendente
+rotinaId=r1
+
+id=a2
+nome=Médico
+descricao=Sessão com médico
+horarioInicio=14:00
+horarioFim=17:00
+status=pendente
+rotinaId=r1

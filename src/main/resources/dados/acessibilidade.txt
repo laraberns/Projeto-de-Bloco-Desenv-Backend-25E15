@@ -1,0 +1,11 @@
+id=conf1
+usuarioId=1
+tamanhoFonte=grande
+contraste=true
+leituraVoz=true
+
+id=conf2
+usuarioId=2
+tamanhoFonte=grande
+contraste=true
+leituraVoz=true

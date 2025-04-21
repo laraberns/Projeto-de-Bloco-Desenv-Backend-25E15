@@ -1,0 +1,13 @@
+id=1
+nome=Ana
+tipo=principal
+email=ana@email.com
+telefone=123456789
+senha=1234
+
+id=2
+nome=João
+tipo=responsavel
+email=joao@email.com
+telefone=987654321
+senha=5678

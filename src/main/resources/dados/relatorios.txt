@@ -1,0 +1,15 @@
+id=rel1
+usuarioId=1
+periodoInicio=2024-09-01
+periodoFim=2024-09-30
+totalAtividades=10
+concluidas=8
+naoRealizadas=2
+
+id=rel2
+usuarioId=2
+periodoInicio=2024-06-04
+periodoFim=2024-06-30
+totalAtividades=5
+concluidas=3
+naoRealizadas=2
