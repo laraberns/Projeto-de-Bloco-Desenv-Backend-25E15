@@ -1,20 +1,29 @@
 package com.entendomeudia.service;
 
 import com.entendomeudia.model.Atividade;
-import java.util.*;
+import com.entendomeudia.repository.AtividadeRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+import java.util.Collection;
+import java.util.Optional;
+
+@Service
 public class AtividadeService {
-    private final Map<String, Atividade> atividades = new HashMap<>();
 
-    public void incluirAtividade(Atividade atividade) {
-        atividades.put(atividade.getId(), atividade);
+    @Autowired
+    private AtividadeRepository atividadeRepository;
+
+    public Atividade incluirAtividade(Atividade atividade) {
+        return atividadeRepository.save(atividade);
     }
 
     public Collection<Atividade> obterLista() {
-        return atividades.values();
+        return atividadeRepository.findAll();
     }
 
-    public Atividade buscarPorId(String id) {
-        return atividades.get(id);
+    public Atividade buscarPorId(Long id) {
+        Optional<Atividade> resultado = atividadeRepository.findById(id);
+        return resultado.orElse(null);
     }
 }

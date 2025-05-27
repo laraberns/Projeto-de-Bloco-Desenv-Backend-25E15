@@ -1,20 +1,27 @@
 package com.entendomeudia.service;
 
 import com.entendomeudia.model.ConfiguracaoAcessibilidade;
-import java.util.*;
+import com.entendomeudia.repository.ConfiguracaoAcessibilidadeRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+import java.util.Collection;
+
+@Service
 public class ConfiguracaoAcessibilidadeService {
-    private final Map<String, ConfiguracaoAcessibilidade> configuracoes = new HashMap<>();
 
-    public void incluirConfiguracao(ConfiguracaoAcessibilidade config) {
-        configuracoes.put(config.getUsuario().getId(), config);
+    @Autowired
+    private ConfiguracaoAcessibilidadeRepository repository;
+
+    public ConfiguracaoAcessibilidade incluirConfiguracao(ConfiguracaoAcessibilidade config) {
+        return repository.save(config);
     }
 
     public Collection<ConfiguracaoAcessibilidade> recuperarConfiguracoes() {
-        return configuracoes.values();
+        return repository.findAll();
     }
 
-    public ConfiguracaoAcessibilidade buscarPorUsuarioId(String id) {
-        return configuracoes.get(id);
+    public ConfiguracaoAcessibilidade buscarPorUsuarioId(Long usuarioId) {
+        return repository.findByUsuarioId(usuarioId);
     }
 }

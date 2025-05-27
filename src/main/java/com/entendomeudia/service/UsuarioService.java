@@ -1,20 +1,27 @@
 package com.entendomeudia.service;
 
 import com.entendomeudia.model.Usuario;
-import java.util.*;
+import com.entendomeudia.repository.UsuarioRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+import java.util.Collection;
+
+@Service
 public class UsuarioService {
-    private final Map<String, Usuario> usuarios = new HashMap<>();
 
-    public void incluirUsuario(Usuario usuario) {
-        usuarios.put(usuario.getId(), usuario);
+    @Autowired
+    private UsuarioRepository repository;
+
+    public Usuario incluirUsuario(Usuario usuario) {
+        return repository.save(usuario);
     }
 
     public Collection<Usuario> recuperarUsuarios() {
-        return usuarios.values();
+        return repository.findAll();
     }
 
-    public Usuario buscarPorId(String id) {
-        return usuarios.get(id);
+    public Usuario buscarPorId(Long id) {
+        return repository.findById(id).orElse(null);
     }
 }

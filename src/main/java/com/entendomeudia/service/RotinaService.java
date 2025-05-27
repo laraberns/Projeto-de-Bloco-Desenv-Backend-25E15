@@ -1,20 +1,27 @@
 package com.entendomeudia.service;
 
 import com.entendomeudia.model.Rotina;
-import java.util.*;
+import com.entendomeudia.repository.RotinaRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+import java.util.Collection;
+
+@Service
 public class RotinaService {
-    private final Map<String, Rotina> rotinas = new HashMap<>();
 
-    public void incluirRotina(Rotina rotina) {
-        rotinas.put(rotina.getId(), rotina);
+    @Autowired
+    private RotinaRepository repository;
+
+    public Rotina incluirRotina(Rotina rotina) {
+        return repository.save(rotina);
     }
 
     public Collection<Rotina> recuperarRotinas() {
-        return rotinas.values();
+        return repository.findAll();
     }
 
-    public Rotina buscarPorId(String id) {
-        return rotinas.get(id);
+    public Rotina buscarPorId(Long id) {
+        return repository.findById(id).orElse(null);
     }
 }

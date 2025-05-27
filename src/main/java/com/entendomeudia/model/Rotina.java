@@ -1,21 +1,41 @@
 package com.entendomeudia.model;
 
+import jakarta.persistence.*; // ou javax.persistence conforme seu projeto
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class Rotina {
-    private String id;
+@Entity
+@Table(name = "Rotinas")
+public class Rotina implements Serializable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Temporal(TemporalType.DATE)
     private Date data;
+
+    // Muitos para 1 com Usuario (muitos rotinas para um usuario)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id")
     private Usuario usuario;
-    private List<Atividade> atividades = new ArrayList<>(); // 1:N com Atividade
+
+    // 1:N com Atividade - lado "1"
+    @OneToMany(mappedBy = "rotina", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Atividade> atividades = new ArrayList<>();
+
+    public Rotina() {
+        // construtor padrão para JPA
+    }
 
     public Rotina(String id, Date data, Usuario usuario) {
-        this.id = id;
+        // id será gerado, então não deveria setar manualmente
         this.data = data;
         this.usuario = usuario;
     }
 
+    // Factory method continua igual (não é relacionado a JPA)
     public static Rotina fromFile(String path, Usuario usuario) throws Exception {
         BufferedReader br = new BufferedReader(new FileReader(path));
         Map<String, String> map = new HashMap<>();
@@ -29,19 +49,56 @@ public class Rotina {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Date data = sdf.parse(map.get("data"));
 
-        return new Rotina(map.get("id"), data, usuario);
+        // Aqui id era String, mas agora id é Long e gerado automaticamente, então ignorar map.get("id")
+        return new Rotina(data, usuario);
     }
 
-    public String getId() {
+    // Novo construtor para uso interno
+    public Rotina(Date data, Usuario usuario) {
+        this.data = data;
+        this.usuario = usuario;
+    }
+
+    public Long getId() {
         return id;
+    }
+
+    public Date getData() {
+        return data;
+    }
+
+    public void setData(Date data) {
+        this.data = data;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
+    }
+
+    public List<Atividade> getAtividades() {
+        return atividades;
     }
 
     public void adicionarAtividade(Atividade atividade) {
         atividades.add(atividade);
+        atividade.setRotina(this);  // mantem o relacionamento bidirecional coerente
+    }
+
+    public void removerAtividade(Atividade atividade) {
+        atividades.remove(atividade);
+        atividade.setRotina(null);
     }
 
     @Override
     public String toString() {
-        return "Rotina {id='" + id + "', data=" + data + ", usuario='" + usuario.getNome() + "', atividades=" + atividades.size() + "}";
+        return "Rotina {id=" + id +
+                ", data=" + data +
+                ", usuario=" + (usuario != null ? usuario.getNome() : "null") +
+                ", atividades=" + atividades.size() +
+                '}';
     }
 }
