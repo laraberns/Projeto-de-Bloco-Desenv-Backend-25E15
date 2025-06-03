@@ -104,4 +104,27 @@ class RotinaServiceTest {
         assertThat(salva).isNotNull();
         assertThat(salva.getAtividades()).hasSize(2);
     }
+
+    @Test
+    void testRemoverRotina() {
+        Usuario usuario = new Usuario("Lucas", "principal", "senha321");
+        usuario = usuarioRepository.save(usuario);
+
+        Date data = new Date();
+        Rotina rotina = new Rotina(data, usuario);
+        rotina = rotinaRepository.save(rotina);
+
+        boolean removido = rotinaService.removerRotina(rotina.getId());
+        assertThat(removido).isTrue();
+
+        Rotina encontrada = rotinaService.buscarPorId(rotina.getId());
+        assertThat(encontrada).isNull();
+    }
+
+    @Test
+    void testRemoverRotinaNaoExistente() {
+        boolean removido = rotinaService.removerRotina(9999L);
+        assertThat(removido).isFalse();
+    }
+
 }

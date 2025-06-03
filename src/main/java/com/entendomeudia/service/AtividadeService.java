@@ -26,4 +26,8 @@ public class AtividadeService {
         Optional<Atividade> resultado = atividadeRepository.findById(id);
         return resultado.orElse(null);
     }
+
+    public void removerPorId(Long id) {
+        atividadeRepository.deleteById(id);
+    }
 }

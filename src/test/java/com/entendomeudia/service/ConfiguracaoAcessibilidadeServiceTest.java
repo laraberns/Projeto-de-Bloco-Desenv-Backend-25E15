@@ -86,4 +86,26 @@ class ConfiguracaoAcessibilidadeServiceTest {
         ConfiguracaoAcessibilidade encontrada = service.buscarPorUsuarioId(9999L);
         assertThat(encontrada).isNull();
     }
+
+    @Test
+    void testRemoverConfiguracao() {
+        Usuario usuario = new Usuario("Ana", "principal", "senha321");
+        usuario = usuarioRepository.save(usuario);
+
+        ConfiguracaoAcessibilidade config = new ConfiguracaoAcessibilidade(usuario);
+        config.setTamanhoFonte("pequeno");
+        config.setContraste(false);
+        config.setLeituraVoz(false);
+        config = repository.save(config);
+
+        Long id = config.getId();
+
+        // chama o método void de remover
+        service.removerPorId(id);
+
+        // Verifica se foi realmente removido
+        ConfiguracaoAcessibilidade deletado = repository.findById(id).orElse(null);
+        assertThat(deletado).isNull();
+    }
+
 }

@@ -24,7 +24,7 @@ class AtividadeServiceTest {
     private AtividadeRepository atividadeRepository;
 
     @Test
-    void testIncluirListarBuscar() {
+    void testIncluirListarBuscarRemover() {
         Atividade atividade = new Atividade("Estudar", "09:00", "10:00");
         atividade.setDescricao("Testar serviço");
 
@@ -41,5 +41,16 @@ class AtividadeServiceTest {
         Atividade buscado = atividadeService.buscarPorId(salvo.getId());
         assertThat(buscado).isNotNull();
         assertThat(buscado.getDescricao()).isEqualTo("Testar serviço");
+
+        // Remover por ID
+        atividadeService.removerPorId(salvo.getId());
+
+        // Verificar se foi removido
+        Atividade removido = atividadeService.buscarPorId(salvo.getId());
+        assertThat(removido).isNull();
+
+        // Verificar que não está mais na lista
+        Collection<Atividade> aposRemocao = atividadeService.obterLista();
+        assertThat(aposRemocao).doesNotContain(salvo);
     }
 }

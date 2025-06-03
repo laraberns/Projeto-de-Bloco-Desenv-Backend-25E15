@@ -86,4 +86,23 @@ class UsuarioServiceTest {
         assertThat(salvo.getNome()).isEqualTo("Minimal");
         assertThat(salvo.getEmail()).isNull(); // não foi setado
     }
+
+    @Test
+    void testRemoverUsuario() {
+        Usuario usuario = new Usuario("Lucas", "principal", "senha321");
+        usuario = usuarioRepository.save(usuario);
+
+        boolean removido = usuarioService.removerUsuario(usuario.getId());
+        assertThat(removido).isTrue();
+
+        Usuario encontrado = usuarioService.buscarPorId(usuario.getId());
+        assertThat(encontrado).isNull();
+    }
+
+    @Test
+    void testRemoverUsuarioNaoExistente() {
+        boolean removido = usuarioService.removerUsuario(9999L);
+        assertThat(removido).isFalse();
+    }
+
 }

@@ -24,4 +24,26 @@ public class RelatorioService {
     public Relatorio buscarPorId(Long id) {
         return repository.findById(id).orElse(null);
     }
+
+    public Relatorio atualizarRelatorio(Long id, Relatorio novaVersao) {
+        return repository.findById(id).map(relatorioExistente -> {
+            // Atualiza campos (sem alterar id)
+            relatorioExistente.setUsuario(novaVersao.getUsuario());
+            relatorioExistente.setPeriodoInicio(novaVersao.getPeriodoInicio());
+            relatorioExistente.setPeriodoFim(novaVersao.getPeriodoFim());
+            relatorioExistente.setTotalAtividades(novaVersao.getTotalAtividades());
+            relatorioExistente.setConcluidas(novaVersao.getConcluidas());
+            relatorioExistente.setNaoRealizadas(novaVersao.getNaoRealizadas());
+
+            return repository.save(relatorioExistente);
+        }).orElse(null);
+    }
+
+    public boolean removerRelatorio(Long id) {
+        if (repository.existsById(id)) {
+            repository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
 }

@@ -1,9 +1,10 @@
-package com.entendomeudia.service;
+package com.entendomeudia.controller;
 
 import com.entendomeudia.model.Relatorio;
 import com.entendomeudia.model.Usuario;
 import com.entendomeudia.repository.RelatorioRepository;
 import com.entendomeudia.repository.UsuarioRepository;
+import com.entendomeudia.service.RelatorioService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,14 +13,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.Date;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
 @Commit // Remove se quiser rollback automático após os testes
-class RelatorioServiceTest {
+class RelatorioControllerTest {
 
     @Autowired
     private RelatorioService relatorioService;
