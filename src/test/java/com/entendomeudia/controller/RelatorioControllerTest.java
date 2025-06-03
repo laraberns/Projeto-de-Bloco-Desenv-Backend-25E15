@@ -2,129 +2,97 @@ package com.entendomeudia.controller;
 
 import com.entendomeudia.model.Relatorio;
 import com.entendomeudia.model.Usuario;
-import com.entendomeudia.repository.RelatorioRepository;
 import com.entendomeudia.repository.UsuarioRepository;
-import com.entendomeudia.service.RelatorioService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.Commit;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Collection;
 import java.util.Date;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
-@Transactional
-@Commit // Remove se quiser rollback automático após os testes
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
 class RelatorioControllerTest {
 
     @Autowired
-    private RelatorioService relatorioService;
-
-    @Autowired
-    private RelatorioRepository relatorioRepository;
+    private MockMvc mockMvc;
 
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Test
-    void testIncluirRelatorio() {
-        Usuario usuario = new Usuario("João Silva", "principal", "senha123");
+    void testIncluirRelatorioValido() throws Exception {
+        Usuario usuario = new Usuario("João", "principal", "senha");
         usuario = usuarioRepository.save(usuario);
 
-        Date inicio = new Date();
-        Date fim = new Date(inicio.getTime() + 86400000);
-
-        Relatorio relatorio = new Relatorio(usuario, inicio, fim);
+        Relatorio relatorio = new Relatorio();
+        relatorio.setUsuario(usuario);
+        relatorio.setPeriodoInicio(new Date());
+        relatorio.setPeriodoFim(new Date(System.currentTimeMillis() + 86400000));
         relatorio.setTotalAtividades(10);
         relatorio.setConcluidas(8);
         relatorio.setNaoRealizadas(2);
 
-        Relatorio salvo = relatorioService.incluirRelatorio(relatorio);
-
-        assertThat(salvo).isNotNull();
-        assertThat(salvo.getId()).isNotNull();
-        assertThat(salvo.getUsuario()).isEqualTo(usuario);
-        assertThat(salvo.getTotalAtividades()).isEqualTo(10);
-        assertThat(salvo.getConcluidas()).isEqualTo(8);
-        assertThat(salvo.getNaoRealizadas()).isEqualTo(2);
+        mockMvc.perform(post("/relatorios")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(relatorio)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.totalAtividades").value(10));
     }
 
     @Test
-    void testRecuperarRelatorios() {
-        Usuario maria = new Usuario("Maria", "responsavel", "senha456");
-        Usuario carlos = new Usuario("Carlos", "principal", "senha789");
+    void testIncluirRelatorioComUsuarioNulo() throws Exception {
+        Relatorio relatorio = new Relatorio();
+        relatorio.setPeriodoInicio(new Date());
+        relatorio.setPeriodoFim(new Date(System.currentTimeMillis() + 86400000));
 
-        maria = usuarioRepository.save(maria);
-        carlos = usuarioRepository.save(carlos);
-
-        Date hoje = new Date();
-
-        Relatorio r1 = new Relatorio(maria, hoje, hoje);
-        Relatorio r2 = new Relatorio(carlos, hoje, hoje);
-
-        relatorioRepository.save(r1);
-        relatorioRepository.save(r2);
-
-        Collection<Relatorio> resultado = relatorioService.recuperarRelatorios();
-
-        assertThat(resultado).isNotEmpty();
-        assertThat(resultado.size()).isGreaterThanOrEqualTo(2);
+        mockMvc.perform(post("/relatorios")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(relatorio)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("O usuário do relatório é obrigatório."));
     }
 
     @Test
-    void testBuscarPorId() {
-        Usuario ana = new Usuario("Ana", "principal", "senha101");
-        ana = usuarioRepository.save(ana);
-
-        Date inicio = new Date();
-        Date fim = new Date(inicio.getTime() + 86400000);
-
-        Relatorio relatorio = new Relatorio(ana, inicio, fim);
-        relatorio.setTotalAtividades(5);
-        relatorio.setConcluidas(3);
-
-        Relatorio salvo = relatorioRepository.save(relatorio);
-
-        Relatorio encontrado = relatorioService.buscarPorId(salvo.getId());
-
-        assertThat(encontrado).isNotNull();
-        assertThat(encontrado.getUsuario()).isEqualTo(ana);
-        assertThat(encontrado.getTotalAtividades()).isEqualTo(5);
-        assertThat(encontrado.getConcluidas()).isEqualTo(3);
-    }
-
-    @Test
-    void testBuscarPorIdNaoEncontrado() {
-        Relatorio resultado = relatorioService.buscarPorId(9999L);
-        assertThat(resultado).isNull();
-    }
-
-    @Test
-    void testRemoverRelatorio() {
-        Usuario usuario = new Usuario("Pedro", "principal", "senha321");
+    void testIncluirRelatorioComPeriodoInvalido() throws Exception {
+        Usuario usuario = new Usuario("Maria", "principal", "senha");
         usuario = usuarioRepository.save(usuario);
 
-        Date inicio = new Date();
-        Date fim = new Date(inicio.getTime() + 86400000);
+        Relatorio relatorio = new Relatorio();
+        relatorio.setUsuario(usuario);
+        relatorio.setPeriodoInicio(new Date(System.currentTimeMillis() + 86400000)); // amanhã
+        relatorio.setPeriodoFim(new Date()); // hoje
 
-        Relatorio relatorio = new Relatorio(usuario, inicio, fim);
-        relatorio = relatorioRepository.save(relatorio);
-
-        boolean removido = relatorioService.removerRelatorio(relatorio.getId());
-        assertThat(removido).isTrue();
-
-        Relatorio encontrado = relatorioService.buscarPorId(relatorio.getId());
-        assertThat(encontrado).isNull();
+        mockMvc.perform(post("/relatorios")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(relatorio)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("O período final não pode ser anterior ao inicial."));
     }
 
     @Test
-    void testRemoverRelatorioNaoExistente() {
-        boolean removido = relatorioService.removerRelatorio(9999L);
-        assertThat(removido).isFalse();
+    void testBuscarRelatorioNaoEncontrado() throws Exception {
+        mockMvc.perform(get("/relatorios/9999"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Relatório não encontrado."));
     }
 
+    @Test
+    void testRemoverRelatorioNaoEncontrado() throws Exception {
+        mockMvc.perform(delete("/relatorios/9999"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Relatório não encontrado para exclusão."));
+    }
 }

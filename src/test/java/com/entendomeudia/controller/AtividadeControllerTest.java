@@ -32,7 +32,7 @@ class AtividadeControllerTest {
         mockMvc.perform(post("/atividades")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(atividade)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.nome").value("Estudar"));
 
@@ -46,16 +46,14 @@ class AtividadeControllerTest {
     void testBuscarPorId() throws Exception {
         Atividade atividade = new Atividade("Ler", "11:00", "12:00");
 
-        // Cria e recupera o id do retorno
         String response = mockMvc.perform(post("/atividades")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(atividade)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
         Atividade salvo = objectMapper.readValue(response, Atividade.class);
 
-        // Busca pelo id
         mockMvc.perform(get("/atividades/" + salvo.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.nome").value("Ler"));
@@ -68,12 +66,11 @@ class AtividadeControllerTest {
         String response = mockMvc.perform(post("/atividades")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(atividade)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
         Atividade salvo = objectMapper.readValue(response, Atividade.class);
 
-        // Atualiza nome e horários
         salvo.setNome("Dormir Bem");
         salvo.setHorarioInicio("23:00");
         salvo.setHorarioFim("23:30");
@@ -94,18 +91,56 @@ class AtividadeControllerTest {
         String response = mockMvc.perform(post("/atividades")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(atividade)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
         Atividade salvo = objectMapper.readValue(response, Atividade.class);
 
-        // Deleta
         mockMvc.perform(delete("/atividades/" + salvo.getId()))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
-        // Busca deve retornar vazio ou 404 (dependendo do controller)
         mockMvc.perform(get("/atividades/" + salvo.getId()))
-                .andExpect(status().isOk())
-                .andExpect(content().string("")); // seu controller retorna null, então corpo vazio
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testInsercaoInvalida() throws Exception {
+        // Falta nome
+        Atividade atividadeInvalida = new Atividade(null, "08:00", "09:00");
+
+        mockMvc.perform(post("/atividades")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(atividadeInvalida)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("O nome da atividade é obrigatório."));
+    }
+
+    @Test
+    void testAtualizacaoComCamposFaltando() throws Exception {
+        Atividade atividade = new Atividade("Jogar", "15:00", "16:00");
+
+        String response = mockMvc.perform(post("/atividades")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(atividade)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Atividade salvo = objectMapper.readValue(response, Atividade.class);
+
+        // Zerar o nome para simular campo inválido
+        salvo.setNome("");
+
+        mockMvc.perform(put("/atividades/" + salvo.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(salvo)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("O nome da atividade é obrigatório."));
+    }
+
+    @Test
+    void testDeletarInexistente() throws Exception {
+        mockMvc.perform(delete("/atividades/999999"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Atividade não encontrada para exclusão."));
     }
 }

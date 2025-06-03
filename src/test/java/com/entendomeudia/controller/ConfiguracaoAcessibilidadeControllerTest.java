@@ -43,7 +43,6 @@ class ConfiguracaoAcessibilidadeControllerTest {
     @BeforeEach
     void setup() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
-
         usuario = usuarioRepository.save(new Usuario("Teste Usuário", "principal", "senha123"));
     }
 
@@ -53,14 +52,14 @@ class ConfiguracaoAcessibilidadeControllerTest {
         config.setUsuario(usuario);
         config.setContraste(true);
         config.setLeituraVoz(false);
-        config.setTamanhoFonte("16"); // exemplo de tamanho de fonte
+        config.setTamanhoFonte("16");
 
         String json = objectMapper.writeValueAsString(config);
 
         mockMvc.perform(post("/configuracoes")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.contraste").value(true))
                 .andExpect(jsonPath("$.leituraVoz").value(false))
@@ -69,10 +68,27 @@ class ConfiguracaoAcessibilidadeControllerTest {
     }
 
     @Test
-    void testListarConfiguracoes() throws Exception {
-        // Criar uma configuração para garantir que existe algo no banco
+    void testIncluirConfiguracaoSemTamanhoFonte() throws Exception {
         ConfiguracaoAcessibilidade config = new ConfiguracaoAcessibilidade();
         config.setUsuario(usuario);
+        config.setContraste(true);
+        config.setLeituraVoz(true);
+        config.setTamanhoFonte(""); // inválido
+
+        String json = objectMapper.writeValueAsString(config);
+
+        mockMvc.perform(post("/configuracoes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("O tamanho da fonte é obrigatório (pequeno, medio ou grande)."));
+    }
+
+    @Test
+    void testListarConfiguracoes() throws Exception {
+        ConfiguracaoAcessibilidade config = new ConfiguracaoAcessibilidade();
+        config.setUsuario(usuario);
+        config.setTamanhoFonte("14");
         configRepository.save(config);
 
         mockMvc.perform(get("/configuracoes"))
@@ -85,6 +101,7 @@ class ConfiguracaoAcessibilidadeControllerTest {
     void testBuscarPorUsuarioId() throws Exception {
         ConfiguracaoAcessibilidade config = new ConfiguracaoAcessibilidade();
         config.setUsuario(usuario);
+        config.setTamanhoFonte("12");
         configRepository.save(config);
 
         mockMvc.perform(get("/configuracoes/usuario/" + usuario.getId()))
@@ -112,7 +129,7 @@ class ConfiguracaoAcessibilidadeControllerTest {
         atualizacao.setContraste(true);
         atualizacao.setLeituraVoz(true);
         atualizacao.setTamanhoFonte("18");
-        atualizacao.setUsuario(usuario); // geralmente manter o usuário
+        atualizacao.setUsuario(usuario);
 
         String json = objectMapper.writeValueAsString(atualizacao);
 
@@ -126,9 +143,32 @@ class ConfiguracaoAcessibilidadeControllerTest {
     }
 
     @Test
+    void testAtualizarConfiguracaoComFonteInvalida() throws Exception {
+        ConfiguracaoAcessibilidade config = new ConfiguracaoAcessibilidade();
+        config.setUsuario(usuario);
+        config.setTamanhoFonte("14");
+        config = configRepository.save(config);
+
+        ConfiguracaoAcessibilidade atualizacao = new ConfiguracaoAcessibilidade();
+        atualizacao.setTamanhoFonte(""); // inválido
+        atualizacao.setContraste(true);
+        atualizacao.setLeituraVoz(true);
+        atualizacao.setUsuario(usuario);
+
+        String json = objectMapper.writeValueAsString(atualizacao);
+
+        mockMvc.perform(put("/configuracoes/" + config.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("O tamanho da fonte é obrigatório (pequeno, medio ou grande)."));
+    }
+
+    @Test
     void testRemoverConfiguracao() throws Exception {
         ConfiguracaoAcessibilidade config = new ConfiguracaoAcessibilidade();
         config.setUsuario(usuario);
+        config.setTamanhoFonte("14");
         config = configRepository.save(config);
 
         mockMvc.perform(delete("/configuracoes/" + config.getId()))

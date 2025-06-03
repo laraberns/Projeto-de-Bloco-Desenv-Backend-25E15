@@ -46,7 +46,6 @@ public class RotinaControllerTest {
     @BeforeEach
     void setup() {
         mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
-
         usuario = usuarioRepository.save(new Usuario("Teste Usuário", "teste", "senha123"));
     }
 
@@ -68,10 +67,40 @@ public class RotinaControllerTest {
         mockMvc.perform(post("/rotinas")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.usuario.id").value(usuario.getId()))
                 .andExpect(jsonPath("$.data").exists());
+    }
+
+    @Test
+    void testIncluirRotinaSemData() throws Exception {
+        Rotina rotina = new Rotina();
+        rotina.setUsuario(usuario);
+        // rotina.setData(null);
+
+        String json = objectMapper.writeValueAsString(rotina);
+
+        mockMvc.perform(post("/rotinas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("A data da rotina é obrigatória."));
+    }
+
+    @Test
+    void testIncluirRotinaSemUsuario() throws Exception {
+        Rotina rotina = new Rotina();
+        rotina.setData(criarData(2025, 6, 2));
+        rotina.setUsuario(null);
+
+        String json = objectMapper.writeValueAsString(rotina);
+
+        mockMvc.perform(post("/rotinas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("O usuário da rotina é obrigatório."));
     }
 
     @Test
@@ -101,7 +130,8 @@ public class RotinaControllerTest {
     @Test
     void testBuscarPorIdNaoEncontrado() throws Exception {
         mockMvc.perform(get("/rotinas/999999"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Rotina não encontrada."));
     }
 
     @Test
@@ -125,6 +155,46 @@ public class RotinaControllerTest {
     }
 
     @Test
+    void testAtualizarRotinaSemData() throws Exception {
+        Rotina rotina = new Rotina();
+        rotina.setUsuario(usuario);
+        rotina.setData(criarData(2025, 6, 2));
+        rotina = rotinaRepository.save(rotina);
+
+        Rotina atualizacao = new Rotina();
+        atualizacao.setUsuario(usuario);
+        atualizacao.setData(null);
+
+        String json = objectMapper.writeValueAsString(atualizacao);
+
+        mockMvc.perform(put("/rotinas/" + rotina.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("A data da rotina é obrigatória."));
+    }
+
+    @Test
+    void testAtualizarRotinaSemUsuario() throws Exception {
+        Rotina rotina = new Rotina();
+        rotina.setUsuario(usuario);
+        rotina.setData(criarData(2025, 6, 2));
+        rotina = rotinaRepository.save(rotina);
+
+        Rotina atualizacao = new Rotina();
+        atualizacao.setUsuario(null);
+        atualizacao.setData(criarData(2025, 6, 3));
+
+        String json = objectMapper.writeValueAsString(atualizacao);
+
+        mockMvc.perform(put("/rotinas/" + rotina.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("O usuário da rotina é obrigatório."));
+    }
+
+    @Test
     void testAtualizarRotinaNaoEncontrada() throws Exception {
         Rotina atualizacao = new Rotina();
         atualizacao.setUsuario(usuario);
@@ -135,7 +205,8 @@ public class RotinaControllerTest {
         mockMvc.perform(put("/rotinas/999999")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Rotina não encontrada para atualização."));
     }
 
     @Test
@@ -154,6 +225,7 @@ public class RotinaControllerTest {
     @Test
     void testRemoverRotinaNaoEncontrada() throws Exception {
         mockMvc.perform(delete("/rotinas/999999"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Rotina não encontrada para exclusão."));
     }
 }

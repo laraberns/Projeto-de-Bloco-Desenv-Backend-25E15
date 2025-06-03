@@ -19,9 +19,9 @@ public class ConfiguracaoAcessibilidade implements Serializable {
 
     private String tamanhoFonte; // pequeno, medio, grande
 
-    private boolean contraste;
+    private boolean contraste = false; // contraste alto
 
-    private boolean leituraVoz;
+    private boolean leituraVoz = false;
 
     public ConfiguracaoAcessibilidade() {
         // construtor padrão obrigatório para JPA

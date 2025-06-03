@@ -20,7 +20,7 @@ public class Atividade implements Serializable {
 
     private String horarioFim;
 
-    private String status; // pendente, concluida, cancelada
+    private String status = "pendente"; // pendente, concluida, cancelada
 
     // Relacionamento muitos-para-um com Rotina
     @ManyToOne(fetch = FetchType.LAZY)
